@@ -9,17 +9,17 @@
 import Foundation
 
 /// Handles HTTP communication with OpenAI API
-public final class OpenAINetworkClient: BaseNetworkClient {
+final class OpenAINetworkClient: BaseNetworkClient {
     
     // MARK: - Initialization
     
-    public init(apiKey: String) {
+    init(apiKey: String) {
         super.init(apiKey: apiKey, baseURL: "https://api.openai.com/v1")
     }
     
     // MARK: - OpenAI-specific Methods
     
-    public func createChatRequest(endpoint: String, body: Data) throws -> URLRequest {
+    func createChatRequest(endpoint: String, body: Data) throws -> URLRequest {
         var request = try createBaseRequest(endpoint: endpoint, method: "POST")
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         addJSONHeaders(to: &request)

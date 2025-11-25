@@ -9,7 +9,7 @@
 import Foundation
 
 /// Base network client that handles common HTTP operations
-public class BaseNetworkClient {
+class BaseNetworkClient {
     
     // MARK: - Properties
     
@@ -19,14 +19,14 @@ public class BaseNetworkClient {
     
     // MARK: - Initialization
     
-    public init(apiKey: String, baseURL: String) {
+    init(apiKey: String, baseURL: String) {
         self.apiKey = apiKey
         self.baseURL = baseURL
     }
     
     // MARK: - Common Network Operations
     
-    public func executeRequest(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+    func executeRequest(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         do {
             let (data, response) = try await session.data(for: request)
             
@@ -43,7 +43,7 @@ public class BaseNetworkClient {
         }
     }
     
-    public func performNetworkRequest(for request: URLRequest) async throws -> Data {
+    func performNetworkRequest(for request: URLRequest) async throws -> Data {
         let (data, response) = try await executeRequest(request)
         
         guard response.statusCode == 200 else {

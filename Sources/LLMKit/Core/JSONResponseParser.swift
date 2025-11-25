@@ -9,11 +9,11 @@
 import Foundation
 
 /// Handles JSON response parsing and cleaning for AI service responses
-public struct JSONResponseParser {
+struct JSONResponseParser {
     
     private let jsonDecoder: JSONDecoder
     
-    public init(jsonDecoder: JSONDecoder) {
+    init(jsonDecoder: JSONDecoder) {
         self.jsonDecoder = jsonDecoder
     }
     
@@ -51,12 +51,6 @@ public struct JSONResponseParser {
             throw LLMKitError.parsingError("No content in Claude response")
         }
         
-//        let cleanedContent = cleanClaudeJSONResponse(content)
-        
-//        guard let jsonData = cleanedContent.data(using: .utf8) else {
-//            throw LLMKitError.parsingError("Could not convert cleaned response to data")
-//        }
-        
         return response
     }
     
@@ -66,7 +60,7 @@ public struct JSONResponseParser {
     ///   - type: The target model type to decode into
     /// - Returns: Decoded model instance
     /// - Throws: LLMKitError.parsingError if parsing fails
-    public func parseJSONString<T: Decodable>(
+    func parseJSONString<T: Decodable>(
         _ jsonString: String,
         as type: T.Type
     ) throws -> T {
@@ -83,7 +77,7 @@ public struct JSONResponseParser {
     ///   - type: The target model type to decode into
     /// - Returns: Decoded model instance
     /// - Throws: LLMKitError.parsingError if parsing fails
-    public func parseJSON<T: Decodable>(
+    func parseJSON<T: Decodable>(
         _ jsonData: Data,
         as type: T.Type
     ) throws -> T {
@@ -100,7 +94,7 @@ public struct JSONResponseParser {
     /// Cleans Claude AI response content by removing markdown code blocks and extra formatting
     /// - Parameter content: Raw Claude response content
     /// - Returns: Cleaned JSON string
-    public  func cleanClaudeJSONResponse(_ content: String) -> String {
+    func cleanClaudeJSONResponse(_ content: String) -> String {
         var text = content.trimmingCharacters(in: .whitespacesAndNewlines)
         
         // Remove markdown code blocks
@@ -128,7 +122,7 @@ public struct JSONResponseParser {
     /// Validates that a string contains valid JSON structure
     /// - Parameter jsonString: String to validate
     /// - Returns: True if the string appears to contain valid JSON structure
-    public  func isValidJSONStructure(_ jsonString: String) -> Bool {
+    func isValidJSONStructure(_ jsonString: String) -> Bool {
         let trimmed = jsonString.trimmingCharacters(in: .whitespacesAndNewlines)
         return (trimmed.hasPrefix("{") && trimmed.hasSuffix("}")) ||
                (trimmed.hasPrefix("[") && trimmed.hasSuffix("]"))
@@ -137,7 +131,7 @@ public struct JSONResponseParser {
     /// Extracts JSON object from mixed content (text + JSON)
     /// - Parameter content: Mixed content that may contain JSON
     /// - Returns: Extracted JSON string if found, nil otherwise
-    public  func extractJSONFromMixedContent(_ content: String) -> String? {
+    func extractJSONFromMixedContent(_ content: String) -> String? {
         let cleaned = cleanClaudeJSONResponse(content)
         return isValidJSONStructure(cleaned) ? cleaned : nil
     }

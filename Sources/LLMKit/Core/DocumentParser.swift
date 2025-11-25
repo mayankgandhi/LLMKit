@@ -9,7 +9,7 @@
 import Foundation
 
 /// Unified document parser that handles both OpenAI and Claude parsing
-public final class DocumentParser {
+final class DocumentParser {
     
     // MARK: - Properties
     
@@ -21,7 +21,7 @@ public final class DocumentParser {
     
     // MARK: - Initialization
     
-    public init(openAIKey: String, claudeKey: String) {
+    init(openAIKey: String, claudeKey: String) {
         self.openAIClient = OpenAINetworkClient(apiKey: openAIKey)
         self.claudeClient = ClaudeNetworkClient(apiKey: claudeKey)
         self.claudeFileManager = ClaudeFileManager(networkClient: claudeClient)
@@ -32,7 +32,7 @@ public final class DocumentParser {
     
     // MARK: - Image Parsing (Claude Vision)
 
-    public func parseImage<T: ParseableModel>(
+    func parseImage<T: ParseableModel>(
         data: Data,
         fileName: String,
         as type: T.Type
@@ -82,7 +82,7 @@ public final class DocumentParser {
     
     // MARK: - PDF Parsing (Claude with file upload)
     
-    public func parsePDF<T: ParseableModel>(
+    func parsePDF<T: ParseableModel>(
         data: Data, 
         fileName: String, 
         as type: T.Type
@@ -107,7 +107,7 @@ public final class DocumentParser {
         }
     }
     
-    public func parsePDF<T: ParseableModel>(
+    func parsePDF<T: ParseableModel>(
         from url: URL, 
         as type: T.Type
     ) async throws -> T {
@@ -162,13 +162,13 @@ public final class DocumentParser {
     
     // MARK: - File Type Support
     
-    public func isImageFile(fileName: String) -> Bool {
+    func isImageFile(fileName: String) -> Bool {
         let pathExtension = (fileName as NSString).pathExtension.lowercased()
         let supportedImageTypes = ["jpg", "jpeg", "png", "gif", "webp", "heic", "heif"]
         return supportedImageTypes.contains(pathExtension)
     }
     
-    public func isPDFFile(fileName: String) -> Bool {
+    func isPDFFile(fileName: String) -> Bool {
         let pathExtension = (fileName as NSString).pathExtension.lowercased()
         return pathExtension == "pdf"
     }

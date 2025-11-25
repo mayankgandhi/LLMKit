@@ -22,7 +22,7 @@ let project = Project(
             settings: .settings(
                 base: [
                     "SWIFT_VERSION": "5.0",
-                    "IPHONEOS_DEPLOYMENT_TARGET": "26.0"
+                    "IPHONEOS_DEPLOYMENT_TARGET": "15.0"
                 ],
                 configurations: [
                     .debug(name: "Debug"),
