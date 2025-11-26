@@ -9,34 +9,94 @@
 import Foundation
 
 /// Unified document parser that handles both OpenAI and Claude parsing
-final class DocumentParser {
+class DocumentParser: DocumentParserProtocol {
     
     // MARK: - Properties
     
-    private let openAIClient: OpenAINetworkClient
-    private let claudeClient: ClaudeNetworkClient
-    private let claudeFileManager: ClaudeFileManager
+    private var openAIClient: OpenAINetworkClientProtocol?
+    private var claudeClient: ClaudeNetworkClientProtocol?
+    private var claudeFileManager: FileManagerProtocol?
+    private var currentServiceType: ServiceType
     private let jsonDecoder: JSONDecoder
     private let jsonParser: JSONResponseParser
     
     // MARK: - Initialization
     
-    init(openAIKey: String, claudeKey: String) {
-        self.openAIClient = OpenAINetworkClient(apiKey: openAIKey)
-        self.claudeClient = ClaudeNetworkClient(apiKey: claudeKey)
-        self.claudeFileManager = ClaudeFileManager(networkClient: claudeClient)
+    init(claudeKey: String) {
+        let client = ClaudeNetworkClient(apiKey: claudeKey)
+        self.claudeClient = client
+        self.claudeFileManager = ClaudeFileManager(networkClient: client)
+        self.currentServiceType = .claude
         self.jsonDecoder = JSONDecoder()
         jsonDecoder.dateDecodingStrategy = .iso8601
         self.jsonParser = JSONResponseParser(jsonDecoder: jsonDecoder)
     }
     
-    // MARK: - Image Parsing (Claude Vision)
+    init(openAIKey: String) {
+        self.openAIClient = OpenAINetworkClient(apiKey: openAIKey)
+        self.currentServiceType = .openAI
+        self.jsonDecoder = JSONDecoder()
+        jsonDecoder.dateDecodingStrategy = .iso8601
+        self.jsonParser = JSONResponseParser(jsonDecoder: jsonDecoder)
+    }
+    
+    // MARK: - Dependency Injection Initializers
+    
+    init(
+        claudeClient: ClaudeNetworkClientProtocol?,
+        claudeFileManager: FileManagerProtocol?,
+        openAIClient: OpenAINetworkClientProtocol?,
+        serviceType: ServiceType
+    ) {
+        self.claudeClient = claudeClient
+        self.claudeFileManager = claudeFileManager
+        self.openAIClient = openAIClient
+        self.currentServiceType = serviceType
+        self.jsonDecoder = JSONDecoder()
+        jsonDecoder.dateDecodingStrategy = .iso8601
+        self.jsonParser = JSONResponseParser(jsonDecoder: jsonDecoder)
+    }
+    
+    // MARK: - Configuration
+    
+    func configure(serviceType: ServiceType) {
+        self.currentServiceType = serviceType
+    }
+    
+    func setClaudeKey(_ key: String) {
+        let client = ClaudeNetworkClient(apiKey: key)
+        self.claudeClient = client
+        self.claudeFileManager = ClaudeFileManager(networkClient: client)
+    }
+    
+    func setOpenAIKey(_ key: String) {
+        self.openAIClient = OpenAINetworkClient(apiKey: key)
+    }
+    
+    // MARK: - Image Parsing
 
     func parseImage<T: ParseableModel>(
         data: Data,
         fileName: String,
         as type: T.Type
     ) async throws -> T {
+        switch currentServiceType {
+        case .claude:
+            return try await parseImageWithClaude(data: data, fileName: fileName, as: type)
+        case .openAI:
+            return try await parseImageWithOpenAI(data: data, fileName: fileName, as: type)
+        }
+    }
+    
+    private func parseImageWithClaude<T: ParseableModel>(
+        data: Data,
+        fileName: String,
+        as type: T.Type
+    ) async throws -> T {
+        guard let claudeClient = claudeClient else {
+            throw LLMKitError.invalidAPIKey
+        }
+        
         let base64Data = data.base64EncodedString()
         let mimeType = MimeTypeResolver.mimeType(for: fileName)
 
@@ -80,13 +140,54 @@ final class DocumentParser {
         return try jsonParser.parseClaudeResponse(messageResponse, as: type)
     }
     
-    // MARK: - PDF Parsing (Claude with file upload)
+    private func parseImageWithOpenAI<T: ParseableModel>(
+        data: Data,
+        fileName: String,
+        as type: T.Type
+    ) async throws -> T {
+        guard let openAIClient = openAIClient else {
+            throw LLMKitError.invalidAPIKey
+        }
+        // TODO: Implement OpenAI image parsing
+        throw LLMKitError.unsupportedFileType("OpenAI image parsing not yet implemented")
+    }
+    
+    // MARK: - PDF Parsing
     
     func parsePDF<T: ParseableModel>(
         data: Data, 
         fileName: String, 
         as type: T.Type
     ) async throws -> T {
+        switch currentServiceType {
+        case .claude:
+            return try await parsePDFWithClaude(data: data, fileName: fileName, as: type)
+        case .openAI:
+            return try await parsePDFWithOpenAI(data: data, fileName: fileName, as: type)
+        }
+    }
+    
+    func parsePDF<T: ParseableModel>(
+        from url: URL, 
+        as type: T.Type
+    ) async throws -> T {
+        switch currentServiceType {
+        case .claude:
+            return try await parsePDFWithClaude(from: url, as: type)
+        case .openAI:
+            return try await parsePDFWithOpenAI(from: url, as: type)
+        }
+    }
+    
+    private func parsePDFWithClaude<T: ParseableModel>(
+        data: Data, 
+        fileName: String, 
+        as type: T.Type
+    ) async throws -> T {
+        guard let claudeFileManager = claudeFileManager else {
+            throw LLMKitError.invalidAPIKey
+        }
+        
         var fileID: String?
         do {
             // Upload file to Claude
@@ -100,26 +201,51 @@ final class DocumentParser {
             
             return result
         } catch {
-            if fileID != nil {
-                try await claudeFileManager.deleteDocument(fileId: fileID!)
+            if let fileID = fileID {
+                try? await claudeFileManager.deleteDocument(fileId: fileID)
             }
             throw error
         }
     }
     
-    func parsePDF<T: ParseableModel>(
+    private func parsePDFWithClaude<T: ParseableModel>(
         from url: URL, 
         as type: T.Type
     ) async throws -> T {
+        guard let claudeFileManager = claudeFileManager else {
+            throw LLMKitError.invalidAPIKey
+        }
+        
         let uploadResponse = try await claudeFileManager.uploadDocument(at: url)
         let result = try await parseWithClaude(fileId: uploadResponse.id, as: type)
         try await claudeFileManager.deleteDocument(fileId: uploadResponse.id)
         return result
     }
     
+    private func parsePDFWithOpenAI<T: ParseableModel>(
+        data: Data, 
+        fileName: String, 
+        as type: T.Type
+    ) async throws -> T {
+        // TODO: Implement OpenAI PDF parsing
+        throw LLMKitError.unsupportedFileType("OpenAI PDF parsing not yet implemented")
+    }
+    
+    private func parsePDFWithOpenAI<T: ParseableModel>(
+        from url: URL, 
+        as type: T.Type
+    ) async throws -> T {
+        // TODO: Implement OpenAI PDF parsing
+        throw LLMKitError.unsupportedFileType("OpenAI PDF parsing not yet implemented")
+    }
+    
     // MARK: - Private Helpers
     
     private func parseWithClaude<T: ParseableModel>(fileId: String, as type: T.Type) async throws -> T {
+        guard let claudeClient = claudeClient else {
+            throw LLMKitError.invalidAPIKey
+        }
+        
         let prompt = """
         Please analyze this document and extract the information into the following JSON structure. 
         Return ONLY JSON and nothing else. Ensure that the values are properly cased as per the data: upper cased, lower cased, etc. 

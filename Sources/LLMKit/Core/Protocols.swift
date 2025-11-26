@@ -31,3 +31,49 @@ public protocol DocumentParsingService {
     /// Get the parsing method for a file
     func getParsingMethod(for url: URL) -> ParsingMethod?
 }
+
+// MARK: - Internal Service Protocols
+
+/// Protocol for network clients that handle HTTP communication
+protocol NetworkClientProtocol {
+    var apiKey: String { get }
+    func executeRequest(_ request: URLRequest) async throws -> (Data, HTTPURLResponse)
+    func performNetworkRequest(for request: URLRequest) async throws -> Data
+}
+
+/// Protocol for Claude-specific network operations
+protocol ClaudeNetworkClientProtocol: NetworkClientProtocol {
+    func createFileUploadRequest(endpoint: String, body: Data, contentType: String) throws -> URLRequest
+    func createMessageRequest(endpoint: String, body: Data) throws -> URLRequest
+    func createDeleteRequest(endpoint: String) throws -> URLRequest
+}
+
+/// Protocol for OpenAI-specific network operations
+protocol OpenAINetworkClientProtocol: NetworkClientProtocol {
+    func createChatRequest(endpoint: String, body: Data) throws -> URLRequest
+}
+
+/// Protocol for file management operations
+protocol FileManagerProtocol {
+    func uploadFile(data: Data, fileName: String) async throws -> ClaudeFileUploadResponse
+    func uploadDocument(at url: URL) async throws -> ClaudeFileUploadResponse
+    func deleteDocument(fileId: String) async throws
+}
+
+/// Protocol for document parsing operations
+protocol DocumentParserProtocol {
+    func parseImage<T: ParseableModel>(data: Data, fileName: String, as type: T.Type) async throws -> T
+    func parsePDF<T: ParseableModel>(data: Data, fileName: String, as type: T.Type) async throws -> T
+    func parsePDF<T: ParseableModel>(from url: URL, as type: T.Type) async throws -> T
+    func isImageFile(fileName: String) -> Bool
+    func isPDFFile(fileName: String) -> Bool
+    func configure(serviceType: ServiceType)
+    func setClaudeKey(_ key: String)
+    func setOpenAIKey(_ key: String)
+}
+
+/// Protocol for creating document parsers
+protocol DocumentParserFactoryProtocol {
+    func createParser(claudeKey: String) -> DocumentParserProtocol
+    func createParser(openAIKey: String) -> DocumentParserProtocol
+}

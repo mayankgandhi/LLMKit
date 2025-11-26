@@ -9,7 +9,7 @@
 import Foundation
 
 /// Handles HTTP communication with OpenAI API
-final class OpenAINetworkClient: BaseNetworkClient {
+class OpenAINetworkClient: BaseNetworkClient, OpenAINetworkClientProtocol {
     
     // MARK: - Initialization
     

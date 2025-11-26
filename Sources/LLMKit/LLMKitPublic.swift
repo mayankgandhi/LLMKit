@@ -12,14 +12,19 @@ import Foundation
 /// Factory for creating LLMKit services
 public struct LLMKitFactory {
     
-    /// Create a unified document parsing service with OpenAI
-    public static func createUnifiedService(
-        claudeKey: String,
-        openAIKey: String
-    ) -> UnifiedDocumentParsingService {
+    /// Create a unified document parsing service configured for Claude
+    public static func createUnifiedService(claudeKey: String) -> UnifiedDocumentParsingService {
         return UnifiedDocumentParsingService(
-            openAIKey: openAIKey,
-            claudeKey: claudeKey
+            apiKey: claudeKey,
+            serviceType: .claude
+        )
+    }
+    
+    /// Create a unified document parsing service configured for OpenAI
+    public static func createUnifiedService(openAIKey: String) -> UnifiedDocumentParsingService {
+        return UnifiedDocumentParsingService(
+            apiKey: openAIKey,
+            serviceType: .openAI
         )
     }
     

@@ -21,7 +21,7 @@ final class LLMKitTests: XCTestCase {
     // MARK: - DocumentParser Integration Tests
     
     func testDocumentParser_FileTypeDetection() {
-        let documentParser = DocumentParser(openAIKey: "test", claudeKey: "test")
+        let documentParser = DocumentParser(claudeKey: "test")
         
         XCTAssertTrue(documentParser.isImageFile(fileName: "test.jpg"))
         XCTAssertTrue(documentParser.isImageFile(fileName: "test.png"))
@@ -41,6 +41,27 @@ final class LLMKitTests: XCTestCase {
         let openAIKey = "test-openai-key"
         let claudeKey = "test-claude-key"
         
-        XCTAssertNoThrow(DocumentParser(openAIKey: openAIKey, claudeKey: claudeKey))
+        XCTAssertNoThrow(DocumentParser(claudeKey: claudeKey))
+        XCTAssertNoThrow(DocumentParser(openAIKey: openAIKey))
+    }
+    
+    // MARK: - UnifiedDocumentParsingService Tests
+    
+    func testUnifiedService_Initialization() {
+        let claudeService = LLMKitFactory.createUnifiedService(claudeKey: "test-claude-key")
+        let openAIService = LLMKitFactory.createUnifiedService(openAIKey: "test-openai-key")
+        
+        XCTAssertNotNil(claudeService)
+        XCTAssertNotNil(openAIService)
+    }
+    
+    func testUnifiedService_Configuration() {
+        let service = LLMKitFactory.createUnifiedService(claudeKey: "test-claude-key")
+        
+        service.setOpenAIKey("test-openai-key")
+        service.configure(serviceType: .openAI)
+        
+        // Configuration should succeed without throwing
+        XCTAssertNoThrow(service.configure(serviceType: .claude))
     }
 }

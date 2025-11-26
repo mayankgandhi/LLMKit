@@ -9,7 +9,7 @@
 import Foundation
 
 /// Base network client that handles common HTTP operations
-class BaseNetworkClient {
+class BaseNetworkClient: NetworkClientProtocol {
     
     // MARK: - Properties
     

@@ -9,7 +9,7 @@
 import Foundation
 
 /// Handles file upload and deletion operations with Claude API
-final class ClaudeFileManager {
+class ClaudeFileManager: FileManagerProtocol {
     
     // MARK: - Type Aliases
     
@@ -17,12 +17,12 @@ final class ClaudeFileManager {
     
     // MARK: - Dependencies
     
-    private let networkClient: ClaudeNetworkClient
+    private let networkClient: ClaudeNetworkClientProtocol
     private let jsonDecoder: JSONDecoder
     
     // MARK: - Initialization
     
-    init(networkClient: ClaudeNetworkClient) {
+    init(networkClient: ClaudeNetworkClientProtocol) {
         self.networkClient = networkClient
         self.jsonDecoder = JSONDecoder()
     }

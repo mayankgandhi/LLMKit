@@ -13,15 +13,62 @@ public final class UnifiedDocumentParsingService: DocumentParsingService, Observ
 
     // MARK: - Dependencies
     
-    private let parser: DocumentParser
+    private var parser: DocumentParserProtocol
+    private var serviceType: ServiceType
+    private var claudeKey: String?
+    private var openAIKey: String?
+    private let parserFactory: DocumentParserFactoryProtocol
     
     // MARK: - Initialization
     
     public init(
-        openAIKey: String,
-        claudeKey: String
+        apiKey: String,
+        serviceType: ServiceType,
+        parserFactory: DocumentParserFactoryProtocol = DocumentParserFactory()
     ) {
-        self.parser = DocumentParser(openAIKey: openAIKey, claudeKey: claudeKey)
+        self.serviceType = serviceType
+        self.parserFactory = parserFactory
+        switch serviceType {
+        case .claude:
+            self.claudeKey = apiKey
+            self.parser = parserFactory.createParser(claudeKey: apiKey)
+        case .openAI:
+            self.openAIKey = apiKey
+            self.parser = parserFactory.createParser(openAIKey: apiKey)
+        }
+    }
+    
+    // MARK: - Configuration
+    
+    /// Configure which service to use for parsing
+    /// Note: The service must have been initialized with the appropriate API key
+    public func configure(serviceType: ServiceType) {
+        self.serviceType = serviceType
+        parser.configure(serviceType: serviceType)
+        
+        // Set the appropriate key if available
+        switch serviceType {
+        case .claude:
+            if let claudeKey = claudeKey {
+                parser.setClaudeKey(claudeKey)
+            }
+        case .openAI:
+            if let openAIKey = openAIKey {
+                parser.setOpenAIKey(openAIKey)
+            }
+        }
+    }
+    
+    /// Set the Claude API key (allows switching to Claude service)
+    public func setClaudeKey(_ key: String) {
+        self.claudeKey = key
+        parser.setClaudeKey(key)
+    }
+    
+    /// Set the OpenAI API key (allows switching to OpenAI service)
+    public func setOpenAIKey(_ key: String) {
+        self.openAIKey = key
+        parser.setOpenAIKey(key)
     }
     
     // MARK: - DocumentParsingService
@@ -33,10 +80,7 @@ public final class UnifiedDocumentParsingService: DocumentParsingService, Observ
         case "pdf":
             return try await parser.parsePDF(data: data, fileName: fileName, as: type)
         case "jpg", "jpeg", "png", "gif", "webp", "heic", "heif":
-            guard let openAIType = type as? (ParseableModel).Type else {
-                throw LLMKitError.unsupportedFileType("Type \(T.self) does not support OpenAI schema definition")
-            }
-            return try await parser.parseImage(data: data, fileName: fileName, as: openAIType) as! T
+            return try await parser.parseImage(data: data, fileName: fileName, as: type)
         default:
             throw LLMKitError.unsupportedFileType("File type '\(fileExtension)' is not supported. Supported types: PDF, JPEG, PNG, GIF, WebP, HEIC, HEIF")
         }

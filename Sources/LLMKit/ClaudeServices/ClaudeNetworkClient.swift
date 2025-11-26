@@ -9,7 +9,7 @@
 import Foundation
 
 /// Handles HTTP communication with Claude API
-final class ClaudeNetworkClient: BaseNetworkClient {
+class ClaudeNetworkClient: BaseNetworkClient, ClaudeNetworkClientProtocol {
     
     // MARK: - Initialization
     
