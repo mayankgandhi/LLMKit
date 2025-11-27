@@ -10,29 +10,53 @@ import Foundation
 
 // MARK: - Core Protocols
 
+/// Base protocol for all parseable models
 public protocol ParseableModel: Codable {
     static var parseDefinition: String { get }
+}
+
+/// Protocol for OpenAI-specific parseable models
+public protocol OpenAIParseableModel: ParseableModel {
     static var jsonSchema: OpenAIJSONSchema { get }
+}
+
+/// Protocol for Claude-specific parseable models
+public protocol ClaudeParseableModel: ParseableModel {
     static var tool: ClaudeTool { get }
     static var toolChoice: ToolChoice { get }
 }
 
-/// Simple protocol for AI document parsing services
+/// Base protocol for AI document parsing services
 public protocol DocumentParsingService {
-    /// Parse a document using direct data and filename
-    func parseDocument<T: ParseableModel>(data: Data, fileName: String, as type: T.Type) async throws -> T
-
-    /// Parse a document from file URL
-    func parseDocument<T: ParseableModel>(from url: URL, as type: T.Type) async throws -> T
-
-    /// Query the AI with a prompt and get a structured response
-    func query<T: ParseableModel>(prompt: String, as type: T.Type) async throws -> T
-
     /// Check if a file type is supported
     func isFileTypeSupported(_ url: URL) -> Bool
 
     /// Get the parsing method for a file
     func getParsingMethod(for url: URL) -> ParsingMethod?
+}
+
+/// Protocol for OpenAI document parsing services
+public protocol OpenAIDocumentParsingService: DocumentParsingService {
+    /// Parse a document using direct data and filename
+    func parseDocument<T: OpenAIParseableModel>(data: Data, fileName: String, as type: T.Type) async throws -> T
+
+    /// Parse a document from file URL
+    func parseDocument<T: OpenAIParseableModel>(from url: URL, as type: T.Type) async throws -> T
+
+    /// Query the AI with a prompt and get a structured response
+    func query<T: OpenAIParseableModel>(prompt: String, as type: T.Type) async throws -> T
+}
+
+/// Protocol for Claude document parsing services
+public protocol ClaudeDocumentParsingService: DocumentParsingService {
+    /// Parse a document using direct data and filename
+    func parseDocument<T: ClaudeParseableModel>(data: Data, fileName: String, as type: T.Type) async throws -> T
+
+    /// Parse a document from file URL
+    func parseDocument<T: ClaudeParseableModel>(from url: URL, as type: T.Type) async throws -> T
+
+    /// Query the AI with a prompt and get a structured response
+    func query<T: ClaudeParseableModel>(prompt: String, as type: T.Type) async throws -> T
 }
 
 // MARK: - Internal Service Protocols
@@ -66,12 +90,24 @@ protocol FileManagerProtocol {
 /// Protocol for document parsing operations
 public protocol DocumentParserProtocol {
     var providerName: String { get }
-    func parseImage<T: ParseableModel>(data: Data, fileName: String, as type: T.Type) async throws -> T
-    func parsePDF<T: ParseableModel>(data: Data, fileName: String, as type: T.Type) async throws -> T
-    func parsePDF<T: ParseableModel>(from url: URL, as type: T.Type) async throws -> T
-    func query<T: ParseableModel>(prompt: String, as type: T.Type) async throws -> T
     func isImageFile(fileName: String) -> Bool
     func isPDFFile(fileName: String) -> Bool
+}
+
+/// Protocol for OpenAI document parsing operations
+protocol OpenAIDocumentParserProtocol: DocumentParserProtocol {
+    func parseImage<T: OpenAIParseableModel>(data: Data, fileName: String, as type: T.Type) async throws -> T
+    func parsePDF<T: OpenAIParseableModel>(data: Data, fileName: String, as type: T.Type) async throws -> T
+    func parsePDF<T: OpenAIParseableModel>(from url: URL, as type: T.Type) async throws -> T
+    func query<T: OpenAIParseableModel>(prompt: String, as type: T.Type) async throws -> T
+}
+
+/// Protocol for Claude document parsing operations
+protocol ClaudeDocumentParserProtocol: DocumentParserProtocol {
+    func parseImage<T: ClaudeParseableModel>(data: Data, fileName: String, as type: T.Type) async throws -> T
+    func parsePDF<T: ClaudeParseableModel>(data: Data, fileName: String, as type: T.Type) async throws -> T
+    func parsePDF<T: ClaudeParseableModel>(from url: URL, as type: T.Type) async throws -> T
+    func query<T: ClaudeParseableModel>(prompt: String, as type: T.Type) async throws -> T
 }
 
 /// Protocol for creating document parsers

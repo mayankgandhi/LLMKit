@@ -9,7 +9,7 @@
 import Foundation
 
 /// Claude-specific implementation of document parsing
-final class ClaudeDocumentParser: DocumentParserProtocol {
+final class ClaudeDocumentParser: ClaudeDocumentParserProtocol {
 
     // MARK: - Properties
 
@@ -47,7 +47,7 @@ final class ClaudeDocumentParser: DocumentParserProtocol {
 
     // MARK: - DocumentParserProtocol
 
-    func parseImage<T: ParseableModel>(
+    func parseImage<T: ClaudeParseableModel>(
         data: Data,
         fileName: String,
         as type: T.Type
@@ -55,7 +55,7 @@ final class ClaudeDocumentParser: DocumentParserProtocol {
         return try await parseImageRequest(data: data, fileName: fileName, as: type)
     }
 
-    func parsePDF<T: ParseableModel>(
+    func parsePDF<T: ClaudeParseableModel>(
         data: Data,
         fileName: String,
         as type: T.Type
@@ -63,7 +63,7 @@ final class ClaudeDocumentParser: DocumentParserProtocol {
         return try await parsePDFRequest(data: data, fileName: fileName, as: type)
     }
 
-    func parsePDF<T: ParseableModel>(
+    func parsePDF<T: ClaudeParseableModel>(
         from url: URL,
         as type: T.Type
     ) async throws -> T {
@@ -78,13 +78,13 @@ final class ClaudeDocumentParser: DocumentParserProtocol {
         return FileTypeUtils.isPDFFile(fileName: fileName)
     }
 
-    func query<T: ParseableModel>(prompt: String, as type: T.Type) async throws -> T {
+    func query<T: ClaudeParseableModel>(prompt: String, as type: T.Type) async throws -> T {
         return try await queryWithPrompt(prompt: prompt, as: type)
     }
 
     // MARK: - Private Implementation - Query
 
-    private func parseImageRequest<T: ParseableModel>(
+    private func parseImageRequest<T: ClaudeParseableModel>(
         data: Data,
         fileName: String,
         as type: T.Type
@@ -134,7 +134,7 @@ final class ClaudeDocumentParser: DocumentParserProtocol {
 
     // MARK: - Private Implementation - PDF Parsing
 
-    private func parsePDFRequest<T: ParseableModel>(
+    private func parsePDFRequest<T: ClaudeParseableModel>(
         data: Data,
         fileName: String,
         as type: T.Type
@@ -159,7 +159,7 @@ final class ClaudeDocumentParser: DocumentParserProtocol {
         }
     }
 
-    private func parsePDFRequest<T: ParseableModel>(
+    private func parsePDFRequest<T: ClaudeParseableModel>(
         from url: URL,
         as type: T.Type
     ) async throws -> T {
@@ -171,7 +171,7 @@ final class ClaudeDocumentParser: DocumentParserProtocol {
 
     // MARK: - Private Helpers
 
-    private func parseWithFileUpload<T: ParseableModel>(fileId: String, as type: T.Type) async throws -> T {
+    private func parseWithFileUpload<T: ClaudeParseableModel>(fileId: String, as type: T.Type) async throws -> T {
         let prompt = """
         Please analyze this document and extract the information into the following JSON structure.
         Return ONLY JSON and nothing else. Ensure that the values are properly cased as per the data: upper cased, lower cased, etc.
@@ -212,7 +212,7 @@ final class ClaudeDocumentParser: DocumentParserProtocol {
         return try jsonParser.parseClaudeResponse(messageResponse, as: type)
     }
 
-    private func queryWithPrompt<T: ParseableModel>(prompt: String, as type: T.Type) async throws -> T {
+    private func queryWithPrompt<T: ClaudeParseableModel>(prompt: String, as type: T.Type) async throws -> T {
         let systemPrompt = """
         Extract the requested information from the user's query and return it in the following JSON structure.
         Return ONLY JSON and nothing else. Ensure that the values are properly cased as per the data: upper cased, lower cased, etc.

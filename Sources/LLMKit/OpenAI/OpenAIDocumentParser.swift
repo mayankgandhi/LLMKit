@@ -9,7 +9,7 @@
 import Foundation
 
 /// OpenAI-specific implementation of document parsing
-final class OpenAIDocumentParser: DocumentParserProtocol {
+final class OpenAIDocumentParser: OpenAIDocumentParserProtocol {
 
     // MARK: - Properties
 
@@ -42,7 +42,7 @@ final class OpenAIDocumentParser: DocumentParserProtocol {
 
     // MARK: - DocumentParserProtocol
 
-    func parseImage<T: ParseableModel>(
+    func parseImage<T: OpenAIParseableModel>(
         data: Data,
         fileName: String,
         as type: T.Type
@@ -51,7 +51,7 @@ final class OpenAIDocumentParser: DocumentParserProtocol {
         throw LLMKitError.unsupportedFileType("OpenAI image parsing not yet implemented")
     }
 
-    func parsePDF<T: ParseableModel>(
+    func parsePDF<T: OpenAIParseableModel>(
         data: Data,
         fileName: String,
         as type: T.Type
@@ -60,7 +60,7 @@ final class OpenAIDocumentParser: DocumentParserProtocol {
         throw LLMKitError.unsupportedFileType("OpenAI PDF parsing not yet implemented")
     }
 
-    func parsePDF<T: ParseableModel>(
+    func parsePDF<T: OpenAIParseableModel>(
         from url: URL,
         as type: T.Type
     ) async throws -> T {
@@ -76,7 +76,7 @@ final class OpenAIDocumentParser: DocumentParserProtocol {
         return FileTypeUtils.isPDFFile(fileName: fileName)
     }
 
-    func query<T: ParseableModel>(prompt: String, as type: T.Type) async throws -> T {
+    func query<T: OpenAIParseableModel>(prompt: String, as type: T.Type) async throws -> T {
         let systemPrompt = """
         Extract the requested information from the user's query and return it in the following JSON structure.
         Return ONLY JSON and nothing else. Ensure that the values are properly cased as per the data: upper cased, lower cased, etc.
