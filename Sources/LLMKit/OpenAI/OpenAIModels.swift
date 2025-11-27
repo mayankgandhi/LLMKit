@@ -392,12 +392,12 @@ public struct AnyCodable: Codable {
 
         if container.decodeNil() {
             value = ()
+        } else if let bool = try? container.decode(Bool.self) {
+            value = bool
         } else if let int = try? container.decode(Int.self) {
             value = int
         } else if let double = try? container.decode(Double.self) {
             value = double
-        } else if let bool = try? container.decode(Bool.self) {
-            value = bool
         } else if let string = try? container.decode(String.self) {
             value = string
         } else if let array = try? container.decode([AnyCodable].self) {
