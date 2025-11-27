@@ -146,6 +146,21 @@ public struct OpenAIResponseFormat: Codable {
     }
 }
 
+public struct OpenAITextResponseOptions: Codable {
+    public let format: String
+    public let jsonSchema: OpenAIJSONSchemaWrapper?
+    
+    enum CodingKeys: String, CodingKey {
+        case format
+        case jsonSchema = "json_schema"
+    }
+    
+    public init(format: String = "json_schema", jsonSchema: OpenAIJSONSchemaWrapper? = nil) {
+        self.format = format
+        self.jsonSchema = jsonSchema
+    }
+}
+
 // MARK: - Responses API Models
 
 public struct OpenAIResponseRequest: Codable {
@@ -153,12 +168,11 @@ public struct OpenAIResponseRequest: Codable {
     public let input: [OpenAIMessage]
     public let temperature: Double?
     public let maxOutputTokens: Int?
-    public let responseFormat: OpenAIResponseFormat?
+    public let text: OpenAITextResponseOptions?
 
     enum CodingKeys: String, CodingKey {
-        case model, input, temperature
+        case model, input, temperature, text
         case maxOutputTokens = "max_output_tokens"
-        case responseFormat = "response_format"
     }
 
     public init(
@@ -166,13 +180,13 @@ public struct OpenAIResponseRequest: Codable {
         input: [OpenAIMessage],
         temperature: Double? = nil,
         maxOutputTokens: Int? = nil,
-        responseFormat: OpenAIResponseFormat? = nil
+        text: OpenAITextResponseOptions? = nil
     ) {
         self.model = model
         self.input = input
         self.temperature = temperature
         self.maxOutputTokens = maxOutputTokens
-        self.responseFormat = responseFormat
+        self.text = text
     }
 }
 

@@ -100,20 +100,18 @@ final class OpenAIDocumentParser: DocumentParserProtocol {
             )
         ]
 
-        let responseFormat = OpenAIResponseFormat(
-            type: "json_schema",
-            jsonSchema: OpenAIJSONSchemaWrapper(
-                name: String(describing: T.self),
-                schema: T.jsonSchema
-            )
-        )
-
         let responseRequest = OpenAIResponseRequest(
             model: "gpt-4.1-mini",
             input: messages,
             temperature: 0,
             maxOutputTokens: 1024,
-            responseFormat: responseFormat
+            text: OpenAITextResponseOptions(
+                format: "json_schema",
+                jsonSchema: OpenAIJSONSchemaWrapper(
+                    name: String(describing: T.self),
+                    schema: T.jsonSchema
+                )
+            )
         )
 
         let encoder = JSONEncoder()
