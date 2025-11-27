@@ -106,16 +106,16 @@ final class OpenAIDocumentParser: OpenAIDocumentParserProtocol {
             temperature: 0,
             maxOutputTokens: 1024,
             text: OpenAITextResponseOptions(
-                format: "json_schema",
-                jsonSchema: OpenAIJSONSchemaWrapper(
+                format: OpenAITextFormat(
+                    type: "json_schema",
                     name: String(describing: T.self),
-                    schema: T.jsonSchema
+                    schema: T.jsonSchema,
+                    strict: true
                 )
             )
         )
 
         let encoder = JSONEncoder()
-        encoder.keyEncodingStrategy = .convertToSnakeCase
         let requestData = try encoder.encode(responseRequest)
         let request = try openAIClient.createChatRequest(endpoint: "responses", body: requestData)
         let (data, httpResponse) = try await openAIClient.executeRequest(request)

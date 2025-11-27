@@ -101,7 +101,7 @@ public struct OpenAITextContent: Codable {
     public let text: String
 
     public init(text: String) {
-        self.type = "input_text"
+        self.type = "text"
         self.text = text
     }
 }
@@ -133,31 +133,31 @@ public struct OpenAIImageUrl: Codable {
 
 public struct OpenAIResponseFormat: Codable {
     public let type: String
-    public let jsonSchema: OpenAIJSONSchemaWrapper?
-    
-    enum CodingKeys: String, CodingKey {
-        case type
-        case jsonSchema = "json_schema"
-    }
-    
-    public init(type: String = "json_object", jsonSchema: OpenAIJSONSchemaWrapper? = nil) {
+
+    public init(type: String = "json_object") {
         self.type = type
-        self.jsonSchema = jsonSchema
     }
 }
 
 public struct OpenAITextResponseOptions: Codable {
-    public let format: String
-    public let jsonSchema: OpenAIJSONSchemaWrapper?
-    
-    enum CodingKeys: String, CodingKey {
-        case format
-        case jsonSchema = "json_schema"
-    }
-    
-    public init(format: String = "json_schema", jsonSchema: OpenAIJSONSchemaWrapper? = nil) {
+    public let format: OpenAITextFormat
+
+    public init(format: OpenAITextFormat) {
         self.format = format
-        self.jsonSchema = jsonSchema
+    }
+}
+
+public struct OpenAITextFormat: Codable {
+    public let type: String
+    public let name: String
+    public let schema: OpenAIJSONSchema
+    public let strict: Bool
+
+    public init(type: String = "json_schema", name: String, schema: OpenAIJSONSchema, strict: Bool = true) {
+        self.type = type
+        self.name = name
+        self.schema = schema
+        self.strict = strict
     }
 }
 
@@ -263,17 +263,6 @@ enum OpenAIResponseExtractor {
     }
 }
 
-public struct OpenAIJSONSchemaWrapper: Codable {
-    public let name: String
-    public let strict: Bool
-    public let schema: OpenAIJSONSchema
-    
-    public init(name: String, strict: Bool = true, schema: OpenAIJSONSchema) {
-        self.name = name
-        self.strict = strict
-        self.schema = schema
-    }
-}
 
 public struct OpenAIJSONSchema: Codable {
     
