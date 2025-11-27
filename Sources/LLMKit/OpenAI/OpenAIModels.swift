@@ -264,29 +264,82 @@ enum OpenAIResponseExtractor {
 }
 
 
+// MARK: - JSON Schema Property Type
+
+public struct JSONSchemaProperty {
+    public let type: String
+    public let description: String?
+    public let pattern: String?
+    public let format: String?
+    public let minimum: Int?
+    public let maximum: Int?
+    public let properties: [String: JSONSchemaProperty]?
+    public let required: [String]?
+    public let additionalProperties: Bool?
+    public let items: JSONSchemaProperty?
+
+    public init(
+        type: String,
+        description: String? = nil,
+        pattern: String? = nil,
+        format: String? = nil,
+        minimum: Int? = nil,
+        maximum: Int? = nil,
+        properties: [String: JSONSchemaProperty]? = nil,
+        required: [String]? = nil,
+        additionalProperties: Bool? = nil,
+        items: JSONSchemaProperty? = nil
+    ) {
+        self.type = type
+        self.description = description
+        self.pattern = pattern
+        self.format = format
+        self.minimum = minimum
+        self.maximum = maximum
+        self.properties = properties
+        self.required = required
+        self.additionalProperties = type == "object" ? (additionalProperties ?? false) : additionalProperties
+        self.items = items
+    }
+
+    public var asDictionary: [String: Any] {
+        var dict: [String: Any] = ["type": type]
+        if let description = description { dict["description"] = description }
+        if let pattern = pattern { dict["pattern"] = pattern }
+        if let format = format { dict["format"] = format }
+        if let minimum = minimum { dict["minimum"] = minimum }
+        if let maximum = maximum { dict["maximum"] = maximum }
+        if let properties = properties { dict["properties"] = properties.mapValues { $0.asDictionary } }
+        if let required = required { dict["required"] = required }
+        if let additionalProperties = additionalProperties { dict["additionalProperties"] = additionalProperties }
+        if let items = items { dict["items"] = items.asDictionary }
+        return dict
+    }
+}
+
 public struct OpenAIJSONSchema: Codable {
-    
+
     public let type: String = "object"
     public let properties: [String: Any]
     public let required: [String]
     public let additionalProperties: Bool
-    
+
     enum CodingKeys: String, CodingKey {
         case type, properties, required
         case additionalProperties = "additionalProperties"
     }
-    
+
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(type, forKey: .type)
         try container.encode(required, forKey: .required)
         try container.encode(additionalProperties, forKey: .additionalProperties)
-        
+
         let jsonData = try JSONSerialization.data(withJSONObject: properties)
         let jsonObject = try JSONSerialization.jsonObject(with: jsonData)
         try container.encode(AnyCodable(jsonObject), forKey: .properties)
     }
-    
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         required = try container.decode([String].self, forKey: .required)
@@ -294,17 +347,17 @@ public struct OpenAIJSONSchema: Codable {
         let anyCodable = try container.decode(AnyCodable.self, forKey: .properties)
         properties = anyCodable.value as? [String: AnyCodable] ?? [:]
     }
-    
+
     public init(
-        properties: [String: Any],
+        properties: [String: JSONSchemaProperty],
         required: [String],
         additionalProperties: Bool = false
     ) {
-        self.properties = properties
+        self.properties = properties.mapValues { $0.asDictionary }
         self.required = required
         self.additionalProperties = additionalProperties
     }
-    
+
 }
 
 public struct AnyCodable: Codable {
