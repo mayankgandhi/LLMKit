@@ -10,13 +10,13 @@ import Foundation
 
 /// Factory for creating document parsers
 class DocumentParserFactory: DocumentParserFactoryProtocol {
-    
-    func createParser(claudeKey: String) -> DocumentParserProtocol {
-        return DocumentParser(claudeKey: claudeKey)
+
+    func createClaudeParser(apiKey: String) -> DocumentParserProtocol {
+        return ClaudeDocumentParser(apiKey: apiKey)
     }
-    
-    func createParser(openAIKey: String) -> DocumentParserProtocol {
-        return DocumentParser(openAIKey: openAIKey)
+
+    func createOpenAIParser(apiKey: String) -> DocumentParserProtocol {
+        return OpenAIDocumentParser(apiKey: apiKey)
     }
 }
 

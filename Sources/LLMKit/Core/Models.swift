@@ -46,13 +46,6 @@ public enum LLMKitError: Error, LocalizedError {
     }
 }
 
-// MARK: - Service Configuration
-
-public enum ServiceType {
-    case claude
-    case openAI
-}
-
 // MARK: - File Processing
 
 public enum ParsingMethod {

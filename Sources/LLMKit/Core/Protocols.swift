@@ -61,19 +61,17 @@ protocol FileManagerProtocol {
 }
 
 /// Protocol for document parsing operations
-protocol DocumentParserProtocol {
+public protocol DocumentParserProtocol {
+    var providerName: String { get }
     func parseImage<T: ParseableModel>(data: Data, fileName: String, as type: T.Type) async throws -> T
     func parsePDF<T: ParseableModel>(data: Data, fileName: String, as type: T.Type) async throws -> T
     func parsePDF<T: ParseableModel>(from url: URL, as type: T.Type) async throws -> T
     func isImageFile(fileName: String) -> Bool
     func isPDFFile(fileName: String) -> Bool
-    func configure(serviceType: ServiceType)
-    func setClaudeKey(_ key: String)
-    func setOpenAIKey(_ key: String)
 }
 
 /// Protocol for creating document parsers
 protocol DocumentParserFactoryProtocol {
-    func createParser(claudeKey: String) -> DocumentParserProtocol
-    func createParser(openAIKey: String) -> DocumentParserProtocol
+    func createClaudeParser(apiKey: String) -> DocumentParserProtocol
+    func createOpenAIParser(apiKey: String) -> DocumentParserProtocol
 }

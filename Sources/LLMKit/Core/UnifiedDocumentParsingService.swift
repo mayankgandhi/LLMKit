@@ -12,65 +12,27 @@ import Foundation
 public final class UnifiedDocumentParsingService: DocumentParsingService, ObservableObject {
 
     // MARK: - Dependencies
-    
-    private var parser: DocumentParserProtocol
-    private var serviceType: ServiceType
-    private var claudeKey: String?
-    private var openAIKey: String?
-    private let parserFactory: DocumentParserFactoryProtocol
-    
+
+    private let parser: DocumentParserProtocol
+    public let providerName: String
+
     // MARK: - Initialization
-    
-    public init(
-        apiKey: String,
-        serviceType: ServiceType,
-        parserFactory: DocumentParserFactoryProtocol = DocumentParserFactory()
-    ) {
-        self.serviceType = serviceType
-        self.parserFactory = parserFactory
-        switch serviceType {
-        case .claude:
-            self.claudeKey = apiKey
-            self.parser = parserFactory.createParser(claudeKey: apiKey)
-        case .openAI:
-            self.openAIKey = apiKey
-            self.parser = parserFactory.createParser(openAIKey: apiKey)
-        }
+
+    private init(parser: DocumentParserProtocol) {
+        self.parser = parser
+        self.providerName = parser.providerName
     }
-    
-    // MARK: - Configuration
-    
-    /// Configure which service to use for parsing
-    /// Note: The service must have been initialized with the appropriate API key
-    public func configure(serviceType: ServiceType) {
-        self.serviceType = serviceType
-        parser.configure(serviceType: serviceType)
-        
-        // Set the appropriate key if available
-        switch serviceType {
-        case .claude:
-            if let claudeKey = claudeKey {
-                parser.setClaudeKey(claudeKey)
-            }
-        case .openAI:
-            if let openAIKey = openAIKey {
-                parser.setOpenAIKey(openAIKey)
-            }
-        }
+
+    public convenience init(claudeAPIKey: String) {
+        let parser = ClaudeDocumentParser(apiKey: claudeAPIKey)
+        self.init(parser: parser)
     }
-    
-    /// Set the Claude API key (allows switching to Claude service)
-    public func setClaudeKey(_ key: String) {
-        self.claudeKey = key
-        parser.setClaudeKey(key)
+
+    public convenience init(openAIAPIKey: String) {
+        let parser = OpenAIDocumentParser(apiKey: openAIAPIKey)
+        self.init(parser: parser)
     }
-    
-    /// Set the OpenAI API key (allows switching to OpenAI service)
-    public func setOpenAIKey(_ key: String) {
-        self.openAIKey = key
-        parser.setOpenAIKey(key)
-    }
-    
+
     // MARK: - DocumentParsingService
     
     public func parseDocument<T: ParseableModel>(data: Data, fileName: String, as type: T.Type) async throws -> T {

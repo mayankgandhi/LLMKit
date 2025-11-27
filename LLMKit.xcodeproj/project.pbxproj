@@ -20,8 +20,10 @@
 		4BD7890084BD5EE4B0C56768 /* OpenAINetworkClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F968914663ECE9A20FFE0130 /* OpenAINetworkClient.swift */; };
 		634D704EC63005A34274D033 /* ParsedPrescription.swift in Sources */ = {isa = PBXBuildFile; fileRef = 876A6D1C9BDDFDB0EA57F0E7 /* ParsedPrescription.swift */; };
 		82DAB0E0E0FBDEB94E85B09F /* LLMKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B13E79109CBD36CD7392849 /* LLMKit.swift */; };
-		A1CD10B2541FA3747B17E89F /* DocumentParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6A062132822AADBE15E70C2 /* DocumentParser.swift */; };
 		A682DBC7B21D56DF90381B29 /* UnifiedDocumentParsingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 516A10B39F1BBA9C94481EB4 /* UnifiedDocumentParsingService.swift */; };
+		AA11BB22CC33DD44EE55FF66 /* FileTypeUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF66EE55DD44CC33BB22AA11 /* FileTypeUtils.swift */; };
+		BB22CC33DD44EE55FF66AA77 /* ClaudeDocumentParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA77FF66EE55DD44CC33BB22 /* ClaudeDocumentParser.swift */; };
+		CC33DD44EE55FF66AA77BB88 /* OpenAIDocumentParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB88AA77FF66EE55DD44CC33 /* OpenAIDocumentParser.swift */; };
 		D0866E567D6BB3D4579D369A /* ClaudeNetworkClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02D47BD06D9AF2610405E6CC /* ClaudeNetworkClient.swift */; };
 		D8475F34422149DD2C9D177E /* JSONResponseParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE1EC8782CC4748E4C352D39 /* JSONResponseParserTests.swift */; };
 		E7A9F1972E18BE8EE24011F1 /* LLMKitPublic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BBA77C5E38F78E618703DEE /* LLMKitPublic.swift */; };
@@ -78,7 +80,8 @@
 		95DA7CA8C0C63A66BBF252B8 /* LLMKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LLMKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		976E79D98AA8291911A42966 /* ClaudeFileUploadResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeFileUploadResponse.swift; sourceTree = "<group>"; };
 		9A79B885F0D99BAB2223EB42 /* MimeTypeResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MimeTypeResolver.swift; sourceTree = "<group>"; };
-		A6A062132822AADBE15E70C2 /* DocumentParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentParser.swift; sourceTree = "<group>"; };
+		AA77FF66EE55DD44CC33BB22 /* ClaudeDocumentParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeDocumentParser.swift; sourceTree = "<group>"; };
+		BB88AA77FF66EE55DD44CC33 /* OpenAIDocumentParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIDocumentParser.swift; sourceTree = "<group>"; };
 		BE1EC8782CC4748E4C352D39 /* JSONResponseParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONResponseParserTests.swift; sourceTree = "<group>"; };
 		C1E2C7C2F2BA321007A71ED1 /* MultipartFormBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipartFormBuilder.swift; sourceTree = "<group>"; };
 		DD669C98DB43C900CE1C3E42 /* ClaudeFileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeFileManager.swift; sourceTree = "<group>"; };
@@ -86,6 +89,7 @@
 		ECF634F466F80B981711A1BC /* BaseNetworkClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseNetworkClient.swift; sourceTree = "<group>"; };
 		F968914663ECE9A20FFE0130 /* OpenAINetworkClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAINetworkClient.swift; sourceTree = "<group>"; };
 		FD3F038328523058686DD7CE /* Protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Protocols.swift; sourceTree = "<group>"; };
+		FF66EE55DD44CC33BB22AA11 /* FileTypeUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTypeUtils.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -139,6 +143,7 @@
 		2B917F3579F049A0F686169D /* ClaudeServices */ = {
 			isa = PBXGroup;
 			children = (
+				AA77FF66EE55DD44CC33BB22 /* ClaudeDocumentParser.swift */,
 				DD669C98DB43C900CE1C3E42 /* ClaudeFileManager.swift */,
 				976E79D98AA8291911A42966 /* ClaudeFileUploadResponse.swift */,
 				02D47BD06D9AF2610405E6CC /* ClaudeNetworkClient.swift */,
@@ -167,6 +172,7 @@
 		9212004247E5248452AFF2C2 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				FF66EE55DD44CC33BB22AA11 /* FileTypeUtils.swift */,
 				9A79B885F0D99BAB2223EB42 /* MimeTypeResolver.swift */,
 				C1E2C7C2F2BA321007A71ED1 /* MultipartFormBuilder.swift */,
 			);
@@ -189,6 +195,7 @@
 		9DC48901EC1E652AC276E1F5 /* OpenAI */ = {
 			isa = PBXGroup;
 			children = (
+				BB88AA77FF66EE55DD44CC33 /* OpenAIDocumentParser.swift */,
 				6183D6E05E28A55A58064CC7 /* OpenAIModels.swift */,
 				F968914663ECE9A20FFE0130 /* OpenAINetworkClient.swift */,
 			);
@@ -207,7 +214,6 @@
 			isa = PBXGroup;
 			children = (
 				ECF634F466F80B981711A1BC /* BaseNetworkClient.swift */,
-				A6A062132822AADBE15E70C2 /* DocumentParser.swift */,
 				6AD7E8D9A6C5F02CD10B9421 /* JSONResponseParser.swift */,
 				83096EA8B89FB566B045CED9 /* Models.swift */,
 				FD3F038328523058686DD7CE /* Protocols.swift */,
@@ -322,17 +328,19 @@
 			files = (
 				82DAB0E0E0FBDEB94E85B09F /* LLMKit.swift in Sources */,
 				E7A9F1972E18BE8EE24011F1 /* LLMKitPublic.swift in Sources */,
+				BB22CC33DD44EE55FF66AA77 /* ClaudeDocumentParser.swift in Sources */,
 				18BDE15BE31CEBC7121C2423 /* ClaudeFileManager.swift in Sources */,
 				23147825D83F4F0E601EC527 /* ClaudeFileUploadResponse.swift in Sources */,
 				D0866E567D6BB3D4579D369A /* ClaudeNetworkClient.swift in Sources */,
 				1B443CBAF73B78CC65F51F49 /* BaseNetworkClient.swift in Sources */,
-				A1CD10B2541FA3747B17E89F /* DocumentParser.swift in Sources */,
 				0C357AEB256317864EFB29F1 /* JSONResponseParser.swift in Sources */,
 				25020979E4692F8207E58D30 /* Models.swift in Sources */,
 				145C4016C486BAD54DC7EF6C /* Protocols.swift in Sources */,
 				A682DBC7B21D56DF90381B29 /* UnifiedDocumentParsingService.swift in Sources */,
+				CC33DD44EE55FF66AA77BB88 /* OpenAIDocumentParser.swift in Sources */,
 				2F03A5B2C0D3BDD56D6EF351 /* OpenAIModels.swift in Sources */,
 				4BD7890084BD5EE4B0C56768 /* OpenAINetworkClient.swift in Sources */,
+				AA11BB22CC33DD44EE55FF66 /* FileTypeUtils.swift in Sources */,
 				FEFFC005BE6E20C6E57F2B76 /* MimeTypeResolver.swift in Sources */,
 				F0C6AD3F4B1D4440AE8EBCAA /* MultipartFormBuilder.swift in Sources */,
 			);
