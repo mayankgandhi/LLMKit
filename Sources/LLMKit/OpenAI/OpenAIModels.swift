@@ -266,53 +266,73 @@ enum OpenAIResponseExtractor {
 
 // MARK: - JSON Schema Property Type
 
-public struct JSONSchemaProperty {
-    public let type: String
-    public let description: String?
-    public let pattern: String?
-    public let format: String?
-    public let minimum: Int?
-    public let maximum: Int?
-    public let properties: [String: JSONSchemaProperty]?
-    public let required: [String]?
-    public let additionalProperties: Bool?
-    public let items: JSONSchemaProperty?
+public indirect enum JSONSchemaProperty {
+    case primitive(type: String, description: String? = nil, pattern: String? = nil, format: String? = nil, minimum: Int? = nil, maximum: Int? = nil)
+    case object(type: String, description: String? = nil, properties: [String: JSONSchemaProperty], required: [String]? = nil, additionalProperties: Bool? = nil)
+    case array(type: String, description: String? = nil, items: JSONSchemaProperty)
 
-    public init(
-        type: String,
-        description: String? = nil,
-        pattern: String? = nil,
-        format: String? = nil,
-        minimum: Int? = nil,
-        maximum: Int? = nil,
-        properties: [String: JSONSchemaProperty]? = nil,
-        required: [String]? = nil,
-        additionalProperties: Bool? = nil,
-        items: JSONSchemaProperty? = nil
-    ) {
-        self.type = type
-        self.description = description
-        self.pattern = pattern
-        self.format = format
-        self.minimum = minimum
-        self.maximum = maximum
-        self.properties = properties
-        self.required = required
-        self.additionalProperties = type == "object" ? (additionalProperties ?? false) : additionalProperties
-        self.items = items
+    public var type: String {
+        switch self {
+        case .primitive(let type, _, _, _, _, _),
+             .object(let type, _, _, _, _),
+             .array(let type, _, _):
+            return type
+        }
+    }
+
+    public var description: String? {
+        switch self {
+        case .primitive(_, let description, _, _, _, _),
+             .object(_, let description, _, _, _),
+             .array(_, let description, _):
+            return description
+        }
+    }
+
+    public static func string(description: String? = nil, pattern: String? = nil, format: String? = nil) -> JSONSchemaProperty {
+        .primitive(type: "string", description: description, pattern: pattern, format: format)
+    }
+
+    public static func integer(description: String? = nil, minimum: Int? = nil, maximum: Int? = nil) -> JSONSchemaProperty {
+        .primitive(type: "integer", description: description, minimum: minimum, maximum: maximum)
+    }
+
+    public static func number(description: String? = nil, minimum: Int? = nil, maximum: Int? = nil) -> JSONSchemaProperty {
+        .primitive(type: "number", description: description, minimum: minimum, maximum: maximum)
+    }
+
+    public static func boolean(description: String? = nil) -> JSONSchemaProperty {
+        .primitive(type: "boolean", description: description)
+    }
+
+    public static func object(description: String? = nil, properties: [String: JSONSchemaProperty], required: [String]? = nil, additionalProperties: Bool? = nil) -> JSONSchemaProperty {
+        .object(type: "object", description: description, properties: properties, required: required, additionalProperties: additionalProperties)
+    }
+
+    public static func array(description: String? = nil, items: JSONSchemaProperty) -> JSONSchemaProperty {
+        .array(type: "array", description: description, items: items)
     }
 
     public var asDictionary: [String: Any] {
         var dict: [String: Any] = ["type": type]
         if let description = description { dict["description"] = description }
-        if let pattern = pattern { dict["pattern"] = pattern }
-        if let format = format { dict["format"] = format }
-        if let minimum = minimum { dict["minimum"] = minimum }
-        if let maximum = maximum { dict["maximum"] = maximum }
-        if let properties = properties { dict["properties"] = properties.mapValues { $0.asDictionary } }
-        if let required = required { dict["required"] = required }
-        if let additionalProperties = additionalProperties { dict["additionalProperties"] = additionalProperties }
-        if let items = items { dict["items"] = items.asDictionary }
+
+        switch self {
+        case .primitive(_, _, let pattern, let format, let minimum, let maximum):
+            if let pattern = pattern { dict["pattern"] = pattern }
+            if let format = format { dict["format"] = format }
+            if let minimum = minimum { dict["minimum"] = minimum }
+            if let maximum = maximum { dict["maximum"] = maximum }
+
+        case .object(_, _, let properties, let required, let additionalProperties):
+            dict["properties"] = properties.mapValues { $0.asDictionary }
+            if let required = required { dict["required"] = required }
+            dict["additionalProperties"] = additionalProperties ?? false
+
+        case .array(_, _, let items):
+            dict["items"] = items.asDictionary
+        }
+
         return dict
     }
 }
