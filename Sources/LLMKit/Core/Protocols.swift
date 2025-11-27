@@ -21,13 +21,16 @@ public protocol ParseableModel: Codable {
 public protocol DocumentParsingService {
     /// Parse a document using direct data and filename
     func parseDocument<T: ParseableModel>(data: Data, fileName: String, as type: T.Type) async throws -> T
-    
+
     /// Parse a document from file URL
     func parseDocument<T: ParseableModel>(from url: URL, as type: T.Type) async throws -> T
-    
+
+    /// Query the AI with a prompt and get a structured response
+    func query<T: ParseableModel>(prompt: String, as type: T.Type) async throws -> T
+
     /// Check if a file type is supported
     func isFileTypeSupported(_ url: URL) -> Bool
-    
+
     /// Get the parsing method for a file
     func getParsingMethod(for url: URL) -> ParsingMethod?
 }
@@ -66,6 +69,7 @@ public protocol DocumentParserProtocol {
     func parseImage<T: ParseableModel>(data: Data, fileName: String, as type: T.Type) async throws -> T
     func parsePDF<T: ParseableModel>(data: Data, fileName: String, as type: T.Type) async throws -> T
     func parsePDF<T: ParseableModel>(from url: URL, as type: T.Type) async throws -> T
+    func query<T: ParseableModel>(prompt: String, as type: T.Type) async throws -> T
     func isImageFile(fileName: String) -> Bool
     func isPDFFile(fileName: String) -> Bool
 }

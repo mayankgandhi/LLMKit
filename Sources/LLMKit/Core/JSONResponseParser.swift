@@ -37,6 +37,29 @@ struct JSONResponseParser {
         return try parseJSON(jsonData, as: type)
     }
     
+    /// Extracts structured JSON text from an OpenAI Responses API payload
+    /// - Parameter response: The OpenAI Responses payload
+    /// - Returns: JSON string representing the structured output
+    func extractStructuredJSON(from response: OpenAIResponsePayload) throws -> String {
+        if let text = response.outputText?.first?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !text.isEmpty {
+            return extractJSONFromMixedContent(text) ?? text
+        }
+        
+        if let outputs = response.output {
+            for output in outputs {
+                for content in output.content {
+                    if let text = content.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+                       !text.isEmpty {
+                        return extractJSONFromMixedContent(text) ?? text
+                    }
+                }
+            }
+        }
+        
+        throw LLMKitError.parsingError("No structured JSON content found in OpenAI response")
+    }
+    
     /// Parses Claude message response content into a decodable model
     /// - Parameters:
     ///   - response: The Claude message response
@@ -47,11 +70,20 @@ struct JSONResponseParser {
         _ response: ClaudeMessageResponse<T>,
         as type: T.Type
     ) throws -> T {
-        guard let response = response.content.first?.input else {
+        guard let content = response.content.first else {
             throw LLMKitError.parsingError("No content in Claude response")
         }
-        
-        return response
+
+        if let structuredInput = content.input {
+            return structuredInput
+        }
+
+        guard let rawText = content.text else {
+            throw LLMKitError.parsingError("Claude response missing text content")
+        }
+
+        let cleanedJSON = cleanClaudeJSONResponse(rawText)
+        return try parseJSONString(cleanedJSON, as: type)
     }
     
     /// Parses raw JSON string into a decodable model

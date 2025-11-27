@@ -78,7 +78,11 @@ final class ClaudeDocumentParser: DocumentParserProtocol {
         return FileTypeUtils.isPDFFile(fileName: fileName)
     }
 
-    // MARK: - Private Implementation - Image Parsing
+    func query<T: ParseableModel>(prompt: String, as type: T.Type) async throws -> T {
+        return try await queryWithPrompt(prompt: prompt, as: type)
+    }
+
+    // MARK: - Private Implementation - Query
 
     private func parseImageRequest<T: ParseableModel>(
         data: Data,
@@ -187,6 +191,46 @@ final class ClaudeDocumentParser: DocumentParserProtocol {
                     content: [
                         .text(ClaudeTextContent(text: prompt)),
                         .document(ClaudeDocumentContent(fileId: fileId, citations: ClaudeCitations(enabled: true)))
+                    ]
+                )
+            ]
+        )
+
+        let requestData = try JSONEncoder().encode(messageRequest)
+        let request = try claudeClient.createMessageRequest(endpoint: "messages", body: requestData)
+        let (data, httpResponse) = try await claudeClient.executeRequest(request)
+
+        guard httpResponse.statusCode == 200 else {
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw LLMKitError.parsingError(errorMessage)
+        }
+
+        let messageResponse = try jsonDecoder.decode(
+            ClaudeMessageResponse<T>.self,
+            from: data
+        )
+        return try jsonParser.parseClaudeResponse(messageResponse, as: type)
+    }
+
+    private func queryWithPrompt<T: ParseableModel>(prompt: String, as type: T.Type) async throws -> T {
+        let systemPrompt = """
+        Extract the requested information from the user's query and return it in the following JSON structure.
+        Return ONLY JSON and nothing else. Ensure that the values are properly cased as per the data: upper cased, lower cased, etc.
+        Make sure the data is grammatically correct.
+        \(T.parseDefinition)
+        The response is directly decoded by the same model shared.
+        """
+
+        let messageRequest = ClaudeMessageRequest(
+            model: "claude-sonnet-4-20250514",
+            maxTokens: 4096,
+            tools: [type.tool],
+            toolChoice: type.toolChoice,
+            messages: [
+                ClaudeMessage(
+                    role: "user",
+                    content: [
+                        .text(ClaudeTextContent(text: "\(systemPrompt)\n\nUser Query: \(prompt)"))
                     ]
                 )
             ]

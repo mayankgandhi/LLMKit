@@ -75,4 +75,63 @@ final class OpenAIDocumentParser: DocumentParserProtocol {
     func isPDFFile(fileName: String) -> Bool {
         return FileTypeUtils.isPDFFile(fileName: fileName)
     }
+
+    func query<T: ParseableModel>(prompt: String, as type: T.Type) async throws -> T {
+        let systemPrompt = """
+        Extract the requested information from the user's query and return it in the following JSON structure.
+        Return ONLY JSON and nothing else. Ensure that the values are properly cased as per the data: upper cased, lower cased, etc.
+        Make sure the data is grammatically correct.
+        \(T.parseDefinition)
+        The response is directly decoded by the same model shared.
+        """
+
+        let messages = [
+            OpenAIMessage(
+                role: "system",
+                content: [
+                    .text(OpenAITextContent(text: systemPrompt))
+                ]
+            ),
+            OpenAIMessage(
+                role: "user",
+                content: [
+                    .text(OpenAITextContent(text: prompt))
+                ]
+            )
+        ]
+
+        let responseFormat = OpenAIResponseFormat(
+            type: "json_schema",
+            jsonSchema: OpenAIJSONSchemaWrapper(
+                name: String(describing: T.self),
+                schema: T.jsonSchema
+            )
+        )
+
+        let responseRequest = OpenAIResponseRequest(
+            model: "gpt-4.1-mini",
+            input: messages,
+            temperature: 0,
+            maxOutputTokens: 1024,
+            responseFormat: responseFormat
+        )
+
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        let requestData = try encoder.encode(responseRequest)
+        let request = try openAIClient.createChatRequest(endpoint: "responses", body: requestData)
+        let (data, httpResponse) = try await openAIClient.executeRequest(request)
+
+        guard httpResponse.statusCode == 200 else {
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw LLMKitError.parsingError(errorMessage)
+        }
+
+        let response = try jsonDecoder.decode(OpenAIResponse.self, from: data)
+        guard let jsonString = OpenAIResponseExtractor.extractStructuredJSON(from: response) else {
+            throw LLMKitError.parsingError("OpenAI response did not contain structured JSON output")
+        }
+
+        return try jsonParser.parseJSONString(jsonString, as: type)
+    }
 }

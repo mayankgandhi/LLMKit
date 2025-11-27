@@ -50,7 +50,7 @@ public final class UnifiedDocumentParsingService: DocumentParsingService, Observ
     
     public func parseDocument<T: ParseableModel>(from url: URL, as type: T.Type) async throws -> T {
         let fileExtension = url.pathExtension.lowercased()
-        
+
         switch fileExtension {
         case "pdf":
             return try await parser.parsePDF(from: url, as: type)
@@ -62,7 +62,11 @@ public final class UnifiedDocumentParsingService: DocumentParsingService, Observ
             throw LLMKitError.unsupportedFileType("File type '\(fileExtension)' is not supported. Supported types: PDF, JPEG, PNG, GIF, WebP, HEIC, HEIF")
         }
     }
-    
+
+    public func query<T: ParseableModel>(prompt: String, as type: T.Type) async throws -> T {
+        return try await parser.query(prompt: prompt, as: type)
+    }
+
     // MARK: - File Type Support
     
     public func isFileTypeSupported(_ url: URL) -> Bool {

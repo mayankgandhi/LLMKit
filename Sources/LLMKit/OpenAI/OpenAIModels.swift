@@ -146,6 +146,109 @@ public struct OpenAIResponseFormat: Codable {
     }
 }
 
+// MARK: - Responses API Models
+
+public struct OpenAIResponseRequest: Codable {
+    public let model: String
+    public let input: [OpenAIMessage]
+    public let temperature: Double?
+    public let maxOutputTokens: Int?
+    public let responseFormat: OpenAIResponseFormat?
+
+    enum CodingKeys: String, CodingKey {
+        case model, input, temperature
+        case maxOutputTokens = "max_output_tokens"
+        case responseFormat = "response_format"
+    }
+
+    public init(
+        model: String,
+        input: [OpenAIMessage],
+        temperature: Double? = nil,
+        maxOutputTokens: Int? = nil,
+        responseFormat: OpenAIResponseFormat? = nil
+    ) {
+        self.model = model
+        self.input = input
+        self.temperature = temperature
+        self.maxOutputTokens = maxOutputTokens
+        self.responseFormat = responseFormat
+    }
+}
+
+public struct OpenAIResponse: Codable {
+    public let id: String
+    public let object: String
+    public let created: Int
+    public let model: String
+    public let status: String
+    public let output: [OpenAIResponseOutput]?
+    public let outputText: [String]?
+    public let usage: OpenAIResponseUsage?
+    public let metadata: [String: AnyCodable]?
+
+    enum CodingKeys: String, CodingKey {
+        case id, object, created, model, status, output, usage, metadata
+        case outputText = "output_text"
+    }
+}
+
+public struct OpenAIResponseOutput: Codable {
+    public let id: String
+    public let type: String
+    public let status: String?
+    public let role: String?
+    public let content: [OpenAIResponseOutputContent]
+    public let stopReason: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, type, status, role, content
+        case stopReason = "stop_reason"
+    }
+}
+
+public struct OpenAIResponseOutputContent: Codable {
+    public let type: String
+    public let text: String?
+    public let annotations: [String: AnyCodable]?
+}
+
+public struct OpenAIResponseUsage: Codable {
+    public let inputTokens: Int?
+    public let outputTokens: Int?
+    public let totalTokens: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case inputTokens = "input_tokens"
+        case outputTokens = "output_tokens"
+        case totalTokens = "total_tokens"
+    }
+}
+
+enum OpenAIResponseExtractor {
+    static func extractStructuredJSON(from response: OpenAIResponse) -> String? {
+        if let outputText = response.outputText?.first,
+           outputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
+            return outputText
+        }
+
+        guard let outputs = response.output else {
+            return nil
+        }
+
+        for output in outputs {
+            for content in output.content {
+                if let text = content.text,
+                   text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
+                    return text
+                }
+            }
+        }
+
+        return nil
+    }
+}
+
 public struct OpenAIJSONSchemaWrapper: Codable {
     public let name: String
     public let strict: Bool
@@ -254,8 +357,6 @@ public struct AnyCodable: Codable {
     }
 }
 
-// MARK: - Response Models
-
 public struct OpenAIChatResponse: Codable {
     public let id: String
     public let object: String
@@ -299,5 +400,29 @@ public struct OpenAIUsage: Codable {
         case completionTokens = "completion_tokens"
         case totalTokens = "total_tokens"
     }
+}
+
+// MARK: - Responses API Models
+
+public struct OpenAIResponsePayload: Codable {
+    public let id: String
+    public let object: String
+    public let created: Int
+    public let model: String
+    public let systemFingerprint: String?
+    public let output: [OpenAIResponseOutput]?
+    public let outputText: [String]?
+    public let usage: OpenAIUsage?
+    
+    enum CodingKeys: String, CodingKey {
+        case id, object, created, model, output, usage
+        case systemFingerprint = "system_fingerprint"
+        case outputText = "output_text"
+    }
+}
+
+public struct OpenAIResponseContent: Codable {
+    public let type: String
+    public let text: String?
 }
 
