@@ -99,9 +99,9 @@ public enum OpenAIMessageContent: Codable {
 public struct OpenAITextContent: Codable {
     public let type: String
     public let text: String
-    
+
     public init(text: String) {
-        self.type = "text"
+        self.type = "input_text"
         self.text = text
     }
 }
