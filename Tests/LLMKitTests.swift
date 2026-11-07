@@ -19,49 +19,58 @@ final class LLMKitTests: XCTestCase {
     }
     
     // MARK: - DocumentParser Integration Tests
-    
+
+    // The single `DocumentParser` that took a `claudeKey`/`openAIKey` was replaced by
+    // per-provider parsers behind `DocumentParserProtocol` (commit 0b1bfbf). File-type
+    // detection still lives there, so these assertions carry over unchanged.
     func testDocumentParser_FileTypeDetection() {
-        let documentParser = DocumentParser(claudeKey: "test")
-        
+        let documentParser: DocumentParserProtocol = ClaudeDocumentParser(apiKey: "test")
+
         XCTAssertTrue(documentParser.isImageFile(fileName: "test.jpg"))
         XCTAssertTrue(documentParser.isImageFile(fileName: "test.png"))
         XCTAssertTrue(documentParser.isImageFile(fileName: "test.gif"))
         XCTAssertTrue(documentParser.isImageFile(fileName: "test.webp"))
         XCTAssertTrue(documentParser.isImageFile(fileName: "test.heic"))
-        
+
         XCTAssertTrue(documentParser.isPDFFile(fileName: "document.pdf"))
         XCTAssertTrue(documentParser.isPDFFile(fileName: "DOCUMENT.PDF"))
-        
+
         XCTAssertFalse(documentParser.isImageFile(fileName: "document.pdf"))
         XCTAssertFalse(documentParser.isPDFFile(fileName: "image.jpg"))
         XCTAssertFalse(documentParser.isImageFile(fileName: "text.txt"))
     }
-    
+
     func testDocumentParser_Initialization() {
         let openAIKey = "test-openai-key"
         let claudeKey = "test-claude-key"
-        
-        XCTAssertNoThrow(DocumentParser(claudeKey: claudeKey))
-        XCTAssertNoThrow(DocumentParser(openAIKey: openAIKey))
+
+        XCTAssertEqual(ClaudeDocumentParser(apiKey: claudeKey).providerName, "Claude")
+        XCTAssertEqual(OpenAIDocumentParser(apiKey: openAIKey).providerName, "OpenAI")
     }
-    
-    // MARK: - UnifiedDocumentParsingService Tests
-    
-    func testUnifiedService_Initialization() {
-        let claudeService = LLMKitFactory.createUnifiedService(claudeKey: "test-claude-key")
-        let openAIService = LLMKitFactory.createUnifiedService(openAIKey: "test-openai-key")
-        
-        XCTAssertNotNil(claudeService)
-        XCTAssertNotNil(openAIService)
+
+    // MARK: - Service Factory Tests
+
+    func testFactory_CreatesProviderSpecificServices() {
+        let claudeService = LLMKitFactory.createClaudeService(apiKey: "test-claude-key")
+        let openAIService = LLMKitFactory.createOpenAIService(apiKey: "test-openai-key")
+
+        XCTAssertEqual(claudeService.providerName, "Claude")
+        XCTAssertEqual(openAIService.providerName, "OpenAI")
     }
-    
-    func testUnifiedService_Configuration() {
-        let service = LLMKitFactory.createUnifiedService(claudeKey: "test-claude-key")
-        
-        service.setOpenAIKey("test-openai-key")
-        service.configure(serviceType: .openAI)
-        
-        // Configuration should succeed without throwing
-        XCTAssertNoThrow(service.configure(serviceType: .claude))
+
+    func testService_FileTypeSupport() {
+        let service = LLMKitFactory.createClaudeService(apiKey: "test-claude-key")
+
+        XCTAssertTrue(service.isFileTypeSupported(URL(fileURLWithPath: "/tmp/receipt.pdf")))
+        XCTAssertTrue(service.isFileTypeSupported(URL(fileURLWithPath: "/tmp/receipt.HEIC")))
+        XCTAssertFalse(service.isFileTypeSupported(URL(fileURLWithPath: "/tmp/notes.txt")))
+
+        guard case .pdfFileUpload? = service.getParsingMethod(for: URL(fileURLWithPath: "/tmp/receipt.pdf")) else {
+            return XCTFail("PDFs should be parsed by file upload")
+        }
+        guard case .directVision? = service.getParsingMethod(for: URL(fileURLWithPath: "/tmp/receipt.jpg")) else {
+            return XCTFail("Images should be parsed by direct vision")
+        }
+        XCTAssertNil(service.getParsingMethod(for: URL(fileURLWithPath: "/tmp/notes.txt")))
     }
 }

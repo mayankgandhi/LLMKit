@@ -30,6 +30,7 @@ struct JSONResponseParser {
         as type: T.Type
     ) throws -> T {
         guard let content = response.choices.first?.message.content,
+              !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               let jsonData = content.data(using: .utf8) else {
             throw LLMKitError.parsingError("No content in OpenAI response")
         }
@@ -135,7 +136,14 @@ struct JSONResponseParser {
         
         // Remove any leading/trailing whitespace after cleaning
         text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        
+
+        // A top-level JSON array is already the whole payload. Trimming it to the first
+        // "{" below would strip its brackets and leave a bare comma-separated list of
+        // objects, which no longer decodes.
+        if text.hasPrefix("["), let arrayEnd = text.lastIndex(of: "]") {
+            return String(text[...arrayEnd])
+        }
+
         // Handle cases where the response starts with text before JSON
         if let jsonStart = text.range(of: "{") {
             text = String(text[jsonStart.lowerBound...])
