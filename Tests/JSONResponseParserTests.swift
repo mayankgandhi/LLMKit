@@ -11,7 +11,14 @@ import XCTest
 
 final class JSONResponseParserTests: XCTestCase {
 
-    private let jsonParser = JSONResponseParser(jsonDecoder: JSONDecoder())
+    // Mirrors the decoder the real parsers inject (see ClaudeDocumentParser /
+    // OpenAIDocumentParser): dates cross the wire as ISO-8601, and the fixture
+    // encoder below writes them that way too.
+    private let jsonParser: JSONResponseParser = {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return JSONResponseParser(jsonDecoder: decoder)
+    }()
     
     // MARK: - Test Models
     
@@ -284,7 +291,7 @@ final class JSONResponseParserTests: XCTestCase {
     }
     
     func testIsValidJSONStructure_WithWhitespace_ReturnsTrue() {
-        let validJSON = "  \\n{\\n  \"key\": \"value\"\\n}\\n  "
+        let validJSON = "  \n{\n  \"key\": \"value\"\n}\n  "
         XCTAssertTrue(jsonParser.isValidJSONStructure(validJSON))
     }
     
